@@ -1,11 +1,15 @@
-class bookRepository {
+const BookFactory = require('./book-factory');
+
+class BookRepository {
 
     /**
      *
+     * @param {BookFactory} factory
      * @param connection
      */
-    constructor(connection) {
+    constructor(connection, factory) {
         this.connection = connection;
+        this.factory    = factory;
     }
 
     /**
@@ -41,8 +45,27 @@ class bookRepository {
      * @return {promise <Book[]>}
      */
     all() {
-        return this.connection.select('id','title', 'author', 'publisher', 'price').from('books')
-            .where({deleted_at: 0});
+        let factory = this.factory;
+        return this.connection.select('id', 'title', 'author', 'publisher', 'price').from('books')
+            .where({deleted_at: 0})
+            .then( (results) => {
+                return factory.make(results);
+            });
+    }
+
+    /**
+     *
+     * @param  {int} id
+     * @return {promise <Book[]>}
+     */
+    search(id) {
+        let factory = this.factory;
+        return this.connection.select('id', 'title', 'author', 'publisher', 'price').from('books')
+            .where({id: id, deleted_at: 0})
+            .then( results => {
+                return factory.make(results[0]);
+
+            });
     }
 
     /**
@@ -55,4 +78,4 @@ class bookRepository {
     }
 }
 
-module.exports = bookRepository;
+module.exports = BookRepository;

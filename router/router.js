@@ -1,12 +1,14 @@
-const express = require('express');
-const Router = express.Router;
-const Book = require('../app/book');
-const checkLength = require('../middleware/check-length');
-const checkNull = require('../middleware/check-null');
+const express         = require('express');
+const Router          = express.Router;
+const Book            = require('../app/book');
+const checkLength     = require('../middleware/check-length');
+const checkNull       = require('../middleware/check-null');
+const check404_all    = require('../middleware/check404-all');
+const check404_search = require('../middleware/check404-search');
 
 let router = new Router();
 
-router.get('/books', (req, res) => {
+router.get('/books', check404_all, (req, res) => {
     let repository = req.app.get('books');
 
     repository.all().then( result => {
@@ -14,7 +16,15 @@ router.get('/books', (req, res) => {
     });
 });
 
-router.post('/book',checkNull,checkLength, (req, res) => {
+router.get('/book/:id', check404_search, (req, res) => {
+    let repository = req.app.get('books');
+
+    repository.search(req.params.id).then( result => {
+        res.json(result);
+    });
+});
+
+router.post('/book', checkNull, checkLength, (req, res) => {
     let repository = req.app.get('books');
     let book = new Book(req.body.title, req.body.author);
     book.setPublisher(req.body.publisher);
@@ -26,7 +36,7 @@ router.post('/book',checkNull,checkLength, (req, res) => {
     });
 });
 
-router.put('/book/:id',checkLength, (req, res) => {
+router.put('/book/:id', checkLength, (req, res) => {
     let repository =req.app.get('books');
     let book = new Book(req.body.title, req.body.author);
     book.setPublisher(req.body.publisher);
